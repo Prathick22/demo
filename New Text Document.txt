@@ -193,3 +193,643 @@ FROM sys.database_permissions dp
 JOIN sys.database_principals dpn ON dp.grantee_principal_id = dpn.principal_id
 WHERE dpn.name = 'ADMIN'
 
+
+
+using System;
+using System.Collections.Generic;
+using System.Configuration;
+using System.Data;
+using System.Data.SqlClient;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+
+public partial class _Default : System.Web.UI.Page
+{
+    string sqlCon = ConfigurationManager.ConnectionStrings["sqlConn"].ToString();
+
+    protected void Page_Load(object sender, EventArgs e)
+    {
+        //    if (!IsPostBack)
+        //    {
+        //        try
+        //        {
+
+        //            LoadStudentData();
+        //        }
+        //        catch (Exception ex)
+        //        {
+        //            Response.Write("An error occured:" + ex.Message);
+        //        }
+        //    }
+        //}
+
+        //private void LoadStudentData()
+        //{       
+        //    using (SqlConnection connection = new SqlConnection(sqlCon))
+        //    {
+        //        SqlCommand command = new SqlCommand("SP_SELECT", connection);
+        //        connection.Open();
+        
+        //        connection.Close();
+        //    }
+    }
+
+
+
+    public void btnCreate_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                using (SqlConnection connection = new SqlConnection(sqlCon))
+                {
+                    SqlCommand command = new SqlCommand("SP_CREATE", connection);
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.Parameters.AddWithValue("@FID", txtStuID.Text);
+                    command.Parameters.AddWithValue("@FNAME", txtStuName.Text);
+                    command.Parameters.AddWithValue("@Fmail", txtemail.Text);
+                    command.Parameters.AddWithValue("@FDATE", txtDob.Text);
+                    connection.Open();
+                    int r = command.ExecuteNonQuery();
+                    if (r > 0)
+                    {
+                        Response.Write("New Student Created successfully");
+                    }
+                    connection.Close();
+                }
+            }
+            catch(Exception ex)
+            {
+                Response.Write(ex.Message);
+            }
+        }
+
+    protected void btnUpdate_Click(object sender, EventArgs e)
+    {
+        try
+        {
+            using (SqlConnection connection = new SqlConnection(sqlCon))
+            {
+                SqlCommand command = new SqlCommand("SP_UPDATE", connection);
+                command.CommandType = CommandType.StoredProcedure;
+                command.Parameters.AddWithValue("@FID", txtStuID.Text);
+                command.Parameters.AddWithValue("@Fmail", txtemail.Text);
+                connection.Open();
+                int r = command.ExecuteNonQuery();
+                if (r > 0)
+                {
+                    Response.Write("Student Details updated successfully");
+                }
+                connection.Close();
+            }
+        }
+        catch (Exception ex)
+        {
+            Response.Write(ex.Message);
+        }
+    }
+
+    protected void btnDisplay_Click(object sender, EventArgs e)
+    {
+        try
+        {
+            using (SqlConnection connection = new SqlConnection(sqlCon))
+            {
+                SqlCommand command = new SqlCommand("SP_READ", connection);
+                command.CommandType = CommandType.StoredProcedure;
+                connection.Open();
+                SqlDataAdapter adapter = new SqlDataAdapter(command);
+                DataTable dt = new DataTable();
+                adapter.Fill(dt);
+                gv1.DataSource = dt;
+                gv1.DataBind();
+                connection.Close();
+            }
+        }
+        catch (Exception ex)
+        {
+            Response.Write(ex.Message);
+        }
+    }
+
+    protected void btnDelete_Click(object sender, EventArgs e)
+    {
+        try
+        {
+            using (SqlConnection connection = new SqlConnection(sqlCon))
+            {
+                SqlCommand command = new SqlCommand("SP_DELETE", connection);
+                command.CommandType = CommandType.StoredProcedure;
+                command.Parameters.AddWithValue("@FID", txtStuID.Text);
+                command.Parameters.AddWithValue("@Fmail", txtemail.Text);
+                connection.Open();
+                int r = command.ExecuteNonQuery();
+                if (r > 0)
+                {
+                    Response.Write("Student Details Deleted successfully");
+                }
+                connection.Close();
+            }
+        }
+        catch (Exception ex)
+        {
+            Response.Write(ex.Message);
+        }
+    }
+}
+
+
+<%@ Page Language="C#" AutoEventWireup="true" CodeFile="Default.aspx.cs" Inherits="_Default" %>
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title></title>
+</head>
+<body>
+    <form id="form1" runat="server">
+        <div>
+            <asp:ScriptManager ID="RadScriptManager1" runat="server" />
+            <telerik:RadSkinManager ID="RadSkinManager1" runat="server" ShowChooser="true" />
+            <table>
+                <tr>
+                    <td>Enter Student ID:</td>
+                    <td><telerik:RadTextBox ID="txtStuID" runat="server"></telerik:RadTextBox></td>
+                </tr>
+                <tr>
+                    <td>Enter Student Name:</td>
+                    <td><telerik:RadTextBox ID="txtStuName" runat="server"></telerik:RadTextBox></td>
+                </tr>
+                <tr>
+                    <td>Enter Email:</td>
+                    <td><telerik:RadTextBox ID="txtemail" runat="server"></telerik:RadTextBox></td>
+                </tr>
+                <tr>
+                    <td>Enter Date Of Birth </td>
+                    <td><telerik:RadTextBox ID="txtDob" runat="server"></telerik:RadTextBox></td>
+                </tr>       
+            </table>
+            <telerik:RadButton ID="btnCreate" runat="server" Text="Create" OnClick="btnCreate_Click" />
+            <telerik:RadButton ID="btnUpdate" runat="server" Text="Update" OnClick="btnUpdate_Click" />
+            <telerik:RadButton ID="btnDisplay" runat="server" Text="Display" OnClick="btnDisplay_Click" />
+            <telerik:RadButton ID="btnDelete" runat="server" Text="Delete" OnClick="btnDelete_Click" />
+        </div>
+        <div style="margin-top:100px">
+            <MasterTableView>
+                <PagerTemplate>
+                     <telerik:RadGrid ID="gv1" runat="server" AllowPaging="true" PageSize="3"></telerik:RadGrid>
+                </PagerTemplate>
+            </MasterTableView>
+              </div>
+
+    </form>
+</body>
+</html>
+ 
+
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 
+    Note: As an alternative to hand editing this file you can use the 
+    web admin tool to configure settings for your application. Use
+    the Website->Asp.Net Configuration option in Visual Studio.
+    A full list of settings and comments can be found in 
+    machine.config.comments usually located in 
+    \Windows\Microsoft.Net\Framework\v2.x\Config 
+-->
+<configuration>
+	<appSettings>
+		<add key="CultureToUse" value="en-US" />
+		<add key="DateFormatToUse" value="dd/MM/yyyy" />
+		<add key="ConnectionString" value="server=30.30.30.2;uid=dev;pwd=snss;database=PhoenixONLINE" />
+		<!--<add key="port" value="62740" />-->
+		<add key="port" value="80" />
+		<add key="httpsport" value="443" />
+		<add key="companyname" value="Executive Ship Management Pte Ltd." />
+		<add key="companyshortname" value="ESM" />
+		<add key="theme" value="Theme1" />
+		<add key="screenwidth" value="1024" />
+		<add key="screenheight" value="768" />
+		<!--<add key="FromMail" value="sep@southnests.com" />-->
+		<!--<add key="smtpipaddress" value="121.200.251.220" />-->
+		<add key="FromMail" value="developer11@executiveship.com" />
+		<add key="smtpipaddress" value="outlook.office365.com" />
+		<!--<add key="smtpipaddress" value="210.24.35.227" />-->
+		<add key="smtpport" value="587" />
+		<add key="softwarename" value="Phoenix 3.2" />
+		<add key="showloginlinks" value="yes" />
+		<add key="mailuser" value="developer11@executiveship.com" />
+		<!--<add key="mailuser" value="sep@executiveship.com" />-->
+		<add key="mailpassword" value="Cricko7" />
+		<add key="einvoiceemail" value="einvoice@executiveship.com" />
+		<add key="aspnet:UseLegacyBrowserCaps" value="true" />
+		<add key="marqueeyn" value="false" />
+		<add key="CrystalImageCleaner-AutoStart" value="true" />
+		<add key="CrystalImageCleaner-Sleep" value="60000" />
+		<add key="CrystalImageCleaner-Age" value="120000" />
+		<add key="Telerik.Web.UI.RenderMode" value="lightweight" />
+		<add key="ValidationSettings:UnobtrusiveValidationMode" value="None" />
+		<add key="ReportType" value="1" />
+		<add key="SupportTicketUrl" value="" />
+		<add key="databaseconfig" value="false" />
+		<add key="PhoenixTelerik" value="1" />
+		<add key="is30" value="1" />
+		<add key="Telerik.Skin" value="Windows7" />
+		<add key="Telerik.ScriptManager.TelerikCdn" value="Disabled" />
+		<add key="Telerik.StyleSheetManager.TelerikCdn" value="Disabled" />
+
+		<add key ="SupportTicketUrl" value="http://115.248.135.105/ProductSupport"/>
+
+		<add key="einvoiceemail" value="einvoice@executiveship.com" />
+		<add key="PhoenixServiceSync" value="http://localhost/PhoenixServiceSyncPCL/PhoenixServiceSync.svc" />
+		<add key ="databaseconfig" value="false"/>
+		<add key ="EXEM00" value="server=.\sqlexpress;uid=sa;pwd=sa123;database=PhoenixLive"/>
+		<add key ="EXEM01" value="server=30.30.30.2;uid=dev;pwd=snss;database=PhoenixCHOLAHARMONY"/>
+		<add key ="EXEH00" value="server=30.30.30.2;uid=dev;pwd=snss;database=PhoenixOffshore"/>
+		<add key="SupportApiURL" value="http://30.30.30.71/ProductSupport/"/>
+		<add key="SupportProjectCode" value="40"/>
+		<add key="SupportProductId" value="1"/>
+		<add key="SupportProductAdminEmails" value="developer14@southnests.com"/>
+		<add key="SupportProductDevelopersEmails" value="developer14@southnests.com"/>
+		<add key="ProjectTestingsite" value="http://115.248.135.105/PhoenixCrewStaging/Default.aspx"/>
+		<add key="ProjectLivesite" value="https://apps.southnests.com/PhoenixTelerik/Default.aspx"/>
+	</appSettings>
+	<connectionStrings>
+		<add name ="sqlConn" connectionString="server=localhost;database=DbStudent;uid=sa;pwd=Esm@1234"/>
+		<!--<add name="ConnectionString" connectionString="server=PHOENIXDEMO2016;uid=dev;pwd=snss;database=PhoenixCB0518"/>-->
+		<!--<add name="ConnectionString" connectionString="server=ESMCHN0176\SQLEXPRESS ;uid=dev;pwd=snss;database=PhoenixREDMARAUDER"/>-->
+		<!--<add name="ConnectionString" connectionString="server=.;uid=sa;pwd=Esm@1234;database=PhoenixWORKING2021" />-->
+		<!--<add name="ConnectionString" connectionString="server=ESMCHN0176\SQLEXPRESS ;uid=dev;pwd=snss;database=PhoenixOffice"/>-->
+		<!--<add name="ConnectionString" connectionString="server=30.30.30.87\SQLEXPRESS ;uid=sa;pwd=Esm@1234;database=PhoenixGENCOVIGOUR" />-->
+		<!--<add name="ConnectionString" connectionString="server=.;uid=SA;pwd=Esm@1234;database=PhoenixGENCOVIGOUR;"  />-->
+		<!--<add name="ConnectionString" connectionString="server=.;uid=SA;pwd=Esm@1234;database=PhoenixWorkingTelerik_Developer; Column Encryption Setting=enabled"  />-->
+		<!--<add name="ConnectionString" connectionString="server=ESMCHN0156;uid=sa;pwd=Esm@1234;database=PhoenixDMS" />-->
+		<!--vishnudevi sql-->
+		<!--<add name="ConnectionString" connectionString="server=ESMCHN01DSVIS;uid=sa;pwd=Esm@1234;database=PhoenixTelerikOffice" />-->
+		<!--<add name="ConnectionString" connectionString="server=ESMCHN01DSVIS;uid=sa;pwd=Esm@1234;database=phoenixuat" />-->
+		<!--suryaprakash sql-->
+		<!--<add name="ConnectionString" connectionString="server=localhost;uid=sa;pwd=Esm@1234;database=PhoenixUATFinal" />
+		<add name="ConnectionStringArcmarine" connectionString="server=30.30.30.2;uid=sa;pwd=Esm@1234;database=ArchangelWorking" />-->
+		<!--<add name="ConnectionString" connectionString="server=30.30.30.51;uid=sa;pwd=Esm@1234;database=PhoenixKSLSEATTLE"/>-->
+		<!--<add name="ConnectionString" connectionString="server=30.30.30.2;uid=dev;pwd=snss;database=PhoenixLive" />-->
+		<!--phoenix office and ofc use-->
+		<!--<add name="ConnectionString" connectionString="server=30.30.30.247;uid=dev;pwd=snss;database=phoenixlive" />-->
+		<!--jeenath sql-->
+		<!--<add name="ConnectionString" connectionString="server=30.30.30.235;uid=sa;pwd=Esm@1234;database=PhoenixTelerikOffice" />-->
+
+		<!--<add name="ConnectionString" connectionString="server=DESKTOP-FEJPEDV;uid=sa;pwd=Esm@1234;database=PhoenixTestingSite"/>-->
+		<!--<add name="ConnectionString" connectionString="server=ESMINCHE01DSPRA;uid=sa;pwd=Esm@1234;database=PhoenixTestingSite"/>-->
+		<!--<add name="ConnectionString" connectionString="server=ESMINCHE01DSSUK;uid=sa;pwd=Esm@1234;database=phoenixLive"/>-->
+		<!--<add name="ConnectionStringHRMS" connectionString="server=DESKTOP-FEJPEDV;uid=sa;pwd=Esm@1234;database=PhoenixHRMS" />-->
+		<!--<add name="ConnectionString" connectionString="server=ESMCHN0200 ;uid=sa;pwd=Esm@1234;database=PhoenixGNMTC30" />-->
+		<!--<add name="ConnectionString" connectionString="server=DESKTOP-48FBG31;uid=sa;pwd=Esm@1234;database=PhoenixTestingSite" />-->
+		<!--<add name="ConnectionString" connectionString="server=ESMCHN0176\SQLExPRESS;uid=dev;pwd=snss;database=PhoenixOnline" />-->
+		<!--<add name="ConnectionString" connectionString="server=ESMCHN0158;uid=sa;pwd=Esm@1234;database=PhoenixWorkingStaging" />-->
+	</connectionStrings>
+	<location path="css">
+		<system.web>
+			<authorization>
+				<allow users="*" />
+			</authorization>
+		</system.web>
+	</location>
+	<location path="Content">
+		<system.web>
+			<authorization>
+				<allow users="*" />
+			</authorization>
+		</system.web>
+	</location>
+	<location path="Fonts">
+		<system.web>
+			<authorization>
+				<allow users="*" />
+			</authorization>
+		</system.web>
+	</location>
+	<location path="WebFonts">
+		<system.web>
+			<authorization>
+				<allow users="*" />
+			</authorization>
+		</system.web>
+	</location>
+	<location path="Options">
+		<system.web>
+			<authorization>
+				<allow users="*" />
+			</authorization>
+		</system.web>
+	</location>
+	<location path="Purchase">
+		<system.web>
+			<authorization>
+				<allow users="*" />
+			</authorization>
+		</system.web>
+	</location>
+	<location path="Attachments">
+		<system.web>
+			<authorization>
+				<allow users="*" />
+			</authorization>
+		</system.web>
+	</location>
+	<location path="Common">
+		<system.web>
+			<authorization>
+				<allow users="*" />
+			</authorization>
+		</system.web>
+	</location>
+	<location path="js">
+		<system.web>
+			<authorization>
+				<allow users="*" />
+			</authorization>
+		</system.web>
+	</location>
+	<location path="Scripts">
+		<system.web>
+			<authorization>
+				<allow users="*" />
+			</authorization>
+		</system.web>
+	</location>
+	<location path="Presea">
+		<system.web>
+			<authorization>
+				<allow users="*" />
+			</authorization>
+		</system.web>
+	</location>
+	<location path="PlannedMaintenance">
+		<system.web>
+			<authorization>
+				<allow users="*" />
+			</authorization>
+		</system.web>
+	</location>
+	<location path="EPSSHELP">
+		<system.web>
+			<authorization>
+				<allow users="*" />
+			</authorization>
+		</system.web>
+	</location>
+	<location path="SsrsReports">
+		<system.web>
+			<authorization>
+				<allow users="*" />
+			</authorization>
+		</system.web>
+	</location>
+	<location path="Reports">
+		<system.web>
+			<authorization>
+				<allow users="*" />
+			</authorization>
+		</system.web>
+	</location>
+	<location path="PhoenixPrintGrid.aspx">
+		<system.web>
+			<authorization>
+				<allow users="*" />
+			</authorization>
+		</system.web>
+	</location>
+	<location path="Portal">
+		<system.web>
+			<authorization>
+				<allow users="*" />
+			</authorization>
+		</system.web>
+	</location>
+	<!--
+    For a description of web.config changes see http://go.microsoft.com/fwlink/?LinkId=235367.
+
+    The following attributes can be set on the <httpRuntime> tag.
+      <system.Web>
+        <httpRuntime targetFramework="4.5" />
+      </system.Web>
+  -->
+	<system.web>
+		<!-- 
+            Set compilation debug="true" to insert debugging 
+            symbols into the compiled page. Because this 
+            affects performance, set this value to true only 
+            during development.
+        -->
+		<sessionState timeout="525600" cookieless="UseCookies" />
+		<!-- 
+      Set compilation debug="true" to insert debugging 
+      symbols into the compiled page. Because this 
+      affects performance, set this value to true only 
+      during development.
+    -->
+		<!-- 
+      Set compilation debug="true" to insert debugging 
+      symbols into the compiled page. Because this 
+      affects performance, set this value to true only 
+      during development.
+    -->
+		<compilation debug="true" targetFramework="4.5.2">
+			<assemblies>
+				<add assembly="CrystalDecisions.CrystalReports.Engine, Version=13.0.2000.0, Culture=neutral, PublicKeyToken=692fbea5521e1304" />
+				<add assembly="CrystalDecisions.ReportSource, Version=13.0.2000.0, Culture=neutral, PublicKeyToken=692fbea5521e1304" />
+				<add assembly="CrystalDecisions.Shared, Version=13.0.2000.0, Culture=neutral, PublicKeyToken=692fbea5521e1304" />
+				<add assembly="CrystalDecisions.Web, Version=13.0.2000.0, Culture=neutral, PublicKeyToken=692fbea5521e1304" />
+				<add assembly="Microsoft.ReportViewer.WebForms, Version=12.0.0.0, Culture=neutral, PublicKeyToken=89845DCD8080CC91" />
+				<add assembly="Microsoft.ReportViewer.WinForms, Version=12.0.0.0, Culture=neutral, PublicKeyToken=89845DCD8080CC91" />
+				<add assembly="Microsoft.ReportViewer.Common, Version=12.0.0.0, Culture=neutral, PublicKeyToken=89845DCD8080CC91" />
+				<add assembly="System.Transactions, Version=4.0.0.0, Culture=neutral, PublicKeyToken=B77A5C561934E089" />
+				<add assembly="System.Design, Version=4.0.0.0, Culture=neutral, PublicKeyToken=B03F5F7F11D50A3A" />
+				<add assembly="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=B77A5C561934E089" />
+				<add assembly="System.Web.Extensions.Design, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31BF3856AD364E35" />
+				<add assembly="System.Web.DataVisualization.Design, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31BF3856AD364E35" />
+				<add assembly="System.Web.DataVisualization, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31BF3856AD364E35" />
+				<add assembly="PresentationCore, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35" />
+				<add assembly="WindowsBase, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35" />
+				<add assembly="System.Xaml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+				<add assembly="System.ComponentModel.Composition, Version=4.0.0.0, Culture=neutral, PublicKeyToken=B77A5C561934E089" />
+			</assemblies>
+			<expressionBuilders>
+				<add expressionPrefix="PhoenixTheme" type="SouthNests.Phoenix.Framework.PhoenixThemeExpressionBuilder" />
+			</expressionBuilders>
+		</compilation>
+		<!--
+            The <authentication> section enables configuration 
+            of the security authentication mode used by 
+            ASP.NET to identify an incoming user. 
+        -->
+		<!--
+      The <authentication> section enables configuration 
+      of the security authentication mode used by 
+      ASP.NET to identify an incoming user. 
+    -->
+		<!--
+      The <authentication> section enables configuration 
+      of the security authentication mode used by 
+      ASP.NET to identify an incoming user. 
+    -->
+		<authentication mode="Forms">
+			<forms loginUrl="Default.aspx" defaultUrl="PhoenixWebDefault.aspx" cookieless="UseCookies" />
+		</authentication>
+		<authorization>
+			<deny users="?" />
+		</authorization>
+		<!--
+            The <customErrors> section enables configuration 
+            of what to do if/when an unhandled error occurs 
+            during the execution of a request. Specifically, 
+            it enables developers to configure html error pages 
+            to be displayed in place of a error stack trace.
+        -->
+		<httpRuntime enableVersionHeader="false" maxRequestLength="45000" executionTimeout="110" targetFramework="4.5" />
+		<httpCookies httpOnlyCookies="true" />
+		<trace enabled="false" localOnly="true" />
+		<customErrors mode="RemoteOnly" defaultRedirect="~/DefaultRedirectErrorPage.aspx">
+			<error statusCode="404" redirect="~/Http404ErrorPage.aspx" />
+		</customErrors>
+		<profile>
+			<properties>
+				<add name="RowsPerpage" type="System.Int32" />
+				<add name="ThemeInUse" />
+			</properties>
+		</profile>
+		<pages>
+			<controls>
+				<add tagPrefix="Custom" namespace="SouthNests.Phoenix.Custom" assembly="SouthNests.Phoenix.Custom" />
+				<add tagPrefix="telerik" namespace="Telerik.Web.UI" assembly="Telerik.Web.UI" />
+			</controls>
+			<namespaces>
+				<add namespace="System.Web.Optimization" />
+			</namespaces>
+		</pages>
+		<!--
+      The <customErrors> section enables configuration 
+      of what to do if/when an unhandled error occurs 
+      during the execution of a request. Specifically, 
+      it enables developers to configure html error pages 
+      to be displayed in place of a error stack trace.
+
+    <customErrors mode="RemoteOnly" defaultRedirect="GenericErrorPage.htm">
+      <error statusCode="403" redirect="NoAccess.htm" />
+      <error statusCode="404" redirect="FileNotFound.htm" />
+    </customErrors>
+    -->
+		<!--
+      The <customErrors> section enables configuration 
+      of what to do if/when an unhandled error occurs 
+      during the execution of a request. Specifically, 
+      it enables developers to configure html error pages 
+      to be displayed in place of a error stack trace.
+
+    <customErrors mode="RemoteOnly" defaultRedirect="GenericErrorPage.htm">
+      <error statusCode="403" redirect="NoAccess.htm" />
+      <error statusCode="404" redirect="FileNotFound.htm" />
+    </customErrors>
+    -->
+		<httpHandlers>
+			<add verb="GET" path="CrystalImageHandler.aspx" type="CrystalDecisions.Web.CrystalImageHandler, CrystalDecisions.Web, Version=13.0.2000.0, Culture=neutral, PublicKeyToken=692fbea5521e1304" />
+			<add path="ChartImg.axd" verb="GET,HEAD" type="System.Web.UI.DataVisualization.Charting.ChartHttpHandler, System.Web.DataVisualization, Version=3.5.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35" validate="false" />
+			<add path="ChartImage.axd" type="Telerik.Web.UI.ChartHttpHandler" verb="*" validate="false" />
+			<add path="Telerik.Web.UI.SpellCheckHandler.axd" type="Telerik.Web.UI.SpellCheckHandler" verb="*" validate="false" />
+			<add path="Telerik.Web.UI.DialogHandler.aspx" type="Telerik.Web.UI.DialogHandler" verb="*" validate="false" />
+			<add path="Telerik.RadUploadProgressHandler.ashx" type="Telerik.Web.UI.RadUploadProgressHandler" verb="*" validate="false" />
+			<add path="Telerik.Web.UI.WebResource.axd" type="Telerik.Web.UI.WebResource" verb="*" validate="false" />
+			<add verb="*" path="*.jpg,*.gif" type="WaterMark" />
+			<add verb="*" path="Reserved.ReportViewerWebControl.axd" type="Microsoft.Reporting.WebForms.HttpHandler, Microsoft.ReportViewer.WebForms, Version=12.0.0.0, Culture=neutral, PublicKeyToken=89845dcd8080cc91" />
+		</httpHandlers>
+	</system.web>
+	<!-- 
+        The system.webServer section is required for running ASP.NET AJAX under Internet
+        Information Services 7.0.  It is not necessary for previous version of IIS.
+    -->
+	<system.webServer>
+		<validation validateIntegratedModeConfiguration="false" />
+		<defaultDocument>
+			<files>
+				<clear />
+				<add value="default.aspx" />
+				<add value="Default.htm" />
+				<add value="Default.asp" />
+				<add value="index.htm" />
+				<add value="index.html" />
+				<add value="iisstart.htm" />
+			</files>
+		</defaultDocument>
+		<httpProtocol>
+			<customHeaders>
+				<add name="X-Frame-Options" value="SAMEORIGIN" />
+				<add name="X-Content-Security-Policy" value="default-src 'self'" />
+				<add name="X-WebKit-CSP" value="default-src 'self'" />
+				<add name="Access-Control-Allow-Origin" value="*" />
+				<add name="Access-Control-Allow-Methods" value="POST,GET" />
+				<add name="Access-Control-Allow-Headers" value="Content-Type, Accept, Origin" />
+			</customHeaders>
+		</httpProtocol>
+		<handlers>
+			<remove name="ChartImage_axd" />
+			<remove name="Telerik_Web_UI_SpellCheckHandler_axd" />
+			<remove name="Telerik_Web_UI_DialogHandler_aspx" />
+			<remove name="Telerik_RadUploadProgressHandler_ashx" />
+			<remove name="Telerik_Web_UI_WebResource_axd" />
+			<add name="CrystalImageHandler.aspx_GET" verb="GET" path="CrystalImageHandler.aspx" type="CrystalDecisions.Web.CrystalImageHandler, CrystalDecisions.Web, Version=13.0.2000.0, Culture=neutral, PublicKeyToken=692fbea5521e1304" preCondition="integratedMode" />
+			<add name="ChartImageHandler" preCondition="integratedMode" verb="GET,HEAD" path="ChartImg.axd" type="System.Web.UI.DataVisualization.Charting.ChartHttpHandler, System.Web.DataVisualization, Version=3.5.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35" />
+			<add name="ChartImage_axd" path="ChartImage.axd" type="Telerik.Web.UI.ChartHttpHandler" verb="*" preCondition="integratedMode" />
+			<add name="Telerik_Web_UI_SpellCheckHandler_axd" path="Telerik.Web.UI.SpellCheckHandler.axd" type="Telerik.Web.UI.SpellCheckHandler" verb="*" preCondition="integratedMode" />
+			<add name="Telerik_Web_UI_DialogHandler_aspx" path="Telerik.Web.UI.DialogHandler.aspx" type="Telerik.Web.UI.DialogHandler" verb="*" preCondition="integratedMode" />
+			<add name="Telerik_RadUploadProgressHandler_ashx" path="Telerik.RadUploadProgressHandler.ashx" type="Telerik.Web.UI.RadUploadProgressHandler" verb="*" preCondition="integratedMode" />
+			<add name="Telerik_Web_UI_WebResource_axd" path="Telerik.Web.UI.WebResource.axd" type="Telerik.Web.UI.WebResource" verb="*" preCondition="integratedMode" />
+			<add name="ReportViewerWebControlHandler" preCondition="integratedMode" verb="*" path="Reserved.ReportViewerWebControl.axd" type="Microsoft.Reporting.WebForms.HttpHandler, Microsoft.ReportViewer.WebForms, Version=12.0.0.0, Culture=neutral, PublicKeyToken=89845dcd8080cc91" />
+		</handlers>
+		<security>
+			<requestFiltering>
+				<requestLimits maxAllowedContentLength="45000000" />
+			</requestFiltering>
+		</security>
+	</system.webServer>
+	<runtime>
+		<assemblyBinding xmlns="urn:schemas-microsoft-com:asm.v1">
+			<dependentAssembly>
+				<assemblyIdentity name="AjaxControlToolkit" publicKeyToken="28f01b0e84b6d53e" culture="neutral" />
+				<bindingRedirect oldVersion="0.0.0.0-3.5.7.1213" newVersion="3.5.7.1213" />
+			</dependentAssembly>
+			<dependentAssembly>
+				<assemblyIdentity name="Newtonsoft.Json" publicKeyToken="30ad4fe6b2a6aeed" culture="neutral" />
+				<bindingRedirect oldVersion="0.0.0.0-12.0.0.0" newVersion="12.0.0.0" />
+			</dependentAssembly>
+			<dependentAssembly>
+				<assemblyIdentity name="WebGrease" publicKeyToken="31bf3856ad364e35" culture="neutral" />
+				<bindingRedirect oldVersion="0.0.0.0-1.5.2.14234" newVersion="1.5.2.14234" />
+			</dependentAssembly>
+			<dependentAssembly>
+				<assemblyIdentity name="Telerik.Windows.Zip" publicKeyToken="5803cfa389c90ce7" culture="neutral" />
+				<bindingRedirect oldVersion="0.0.0.0-2020.3.1019.40" newVersion="2020.3.1019.40" />
+			</dependentAssembly>
+			<dependentAssembly>
+				<assemblyIdentity name="System.Net.Http.Formatting" publicKeyToken="31bf3856ad364e35" culture="neutral" />
+				<bindingRedirect oldVersion="0.0.0.0-5.2.7.0" newVersion="5.2.7.0" />
+			</dependentAssembly>
+			<dependentAssembly>
+				<assemblyIdentity name="System.Web.Http" publicKeyToken="31bf3856ad364e35" culture="neutral" />
+				<bindingRedirect oldVersion="0.0.0.0-5.2.7.0" newVersion="5.2.7.0" />
+			</dependentAssembly>
+			<dependentAssembly>
+				<assemblyIdentity name="Telerik.Windows.Documents.Core" publicKeyToken="5803cfa389c90ce7" culture="neutral" />
+				<bindingRedirect oldVersion="0.0.0.0-2020.3.1019.40" newVersion="2020.3.1019.40" />
+			</dependentAssembly>
+			<dependentAssembly>
+				<assemblyIdentity name="Telerik.Windows.Documents.Spreadsheet" publicKeyToken="5803cfa389c90ce7" culture="neutral" />
+				<bindingRedirect oldVersion="0.0.0.0-2020.3.1019.40" newVersion="2020.3.1019.40" />
+			</dependentAssembly>
+			<dependentAssembly>
+				<assemblyIdentity name="Telerik.Windows.Documents.Fixed" publicKeyToken="5803cfa389c90ce7" culture="neutral" />
+				<bindingRedirect oldVersion="0.0.0.0-2020.3.1019.40" newVersion="2020.3.1019.40" />
+			</dependentAssembly>
+		</assemblyBinding>
+	</runtime>
+	
+</configuration>
